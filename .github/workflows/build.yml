@@ -27,7 +27,7 @@ jobs:
           dotnet ApiPacientes.dll --urls http://localhost:5080 &
           sleep 8
           curl -sf -X POST http://localhost:5080/api/pacientes -H "Content-Type: application/json" \
-            -d '{"idPaciente":1,"nombre":"Prueba","aPaterno":"Uno","aMaterno":"","direccion":"Calle 1","telefono":"5512345678","peso":70,"altura":175}'
+            -d '{"nombre":"Prueba","aPaterno":"Uno","aMaterno":"","direccion":"Calle 1","telefono":"5512345678","peso":70,"altura":175}'
           curl -sf "http://localhost:5080/api/pacientes?buscar=prueba"
           curl -sf -X PATCH http://localhost:5080/api/pacientes/1/cancelar
           kill %1

@@ -8,7 +8,6 @@ public class Paciente
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
-    [Range(1, int.MaxValue, ErrorMessage = "El Id debe ser mayor a 0")]
     public int IdPaciente { get; set; }
 
     [Required, StringLength(60)]

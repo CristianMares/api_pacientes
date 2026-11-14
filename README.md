@@ -13,7 +13,7 @@ API REST para el catálogo de pacientes (ASP.NET Core 8 + SQLite).
 | PATCH | `/api/pacientes/{id}/cancelar` | Estatus a C |
 | PATCH | `/api/pacientes/{id}/reactivar` | Estatus a A |
 
-Cada paciente regresa además `imc` y `categoriaImc`. Peso en kg, altura en cm.
+El `idPaciente` lo asigna la API al crear (consecutivo). Cada paciente regresa además `imc` y `categoriaImc`. Peso en kg, altura en cm.
 
 ## Correr local
 

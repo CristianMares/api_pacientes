@@ -42,8 +42,8 @@ public class PacientesController(PacientesContext db) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<PacienteRespuesta>> Crear(Paciente p)
     {
-        if (await db.Pacientes.AnyAsync(x => x.IdPaciente == p.IdPaciente))
-            return Conflict(new { mensaje = $"Ya existe un paciente con Id {p.IdPaciente}" });
+        // El Id lo asigna la API: siguiente al mayor existente
+        p.IdPaciente = (await db.Pacientes.MaxAsync(x => (int?)x.IdPaciente) ?? 0) + 1;
 
         Limpiar(p);
         p.Estatus = "A";
