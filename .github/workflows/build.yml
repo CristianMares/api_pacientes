@@ -36,7 +36,8 @@ jobs:
       - name: Empaquetar
         run: |
           cp instalar-iis.ps1 paquete/
-          cd paquete && zip -r ../api_pacientes_iis.zip .
+          (cd paquete && zip -r ../api_pacientes_iis.zip .)
+          (cd paquete/publish && zip -r ../../api_pacientes_web.zip .)
 
       - uses: actions/upload-artifact@v4
         with:
@@ -48,4 +49,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete latest -y --cleanup-tag || true
-          gh release create latest api_pacientes_iis.zip --title "API para IIS" --notes "Descomprimir y ejecutar instalar-iis.ps1 como administrador."
+          gh release create latest api_pacientes_iis.zip api_pacientes_web.zip --title "API para IIS" --notes "api_pacientes_iis.zip: IIS propio, ejecutar instalar-iis.ps1 como administrador. api_pacientes_web.zip: para subir directo a un hosting (MonsterASP)."
