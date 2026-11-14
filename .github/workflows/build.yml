@@ -1,0 +1,51 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publicar
+        run: dotnet publish ApiPacientes/ApiPacientes.csproj -c Release -o paquete/publish
+
+      - name: Prueba rapida
+        run: |
+          cd paquete/publish
+          dotnet ApiPacientes.dll --urls http://localhost:5080 &
+          sleep 8
+          curl -sf -X POST http://localhost:5080/api/pacientes -H "Content-Type: application/json" \
+            -d '{"idPaciente":1,"nombre":"Prueba","aPaterno":"Uno","aMaterno":"","direccion":"Calle 1","telefono":"5512345678","peso":70,"altura":175}'
+          curl -sf "http://localhost:5080/api/pacientes?buscar=prueba"
+          curl -sf -X PATCH http://localhost:5080/api/pacientes/1/cancelar
+          kill %1
+          rm -rf App_Data
+
+      - name: Empaquetar
+        run: |
+          cp instalar-iis.ps1 paquete/
+          cd paquete && zip -r ../api_pacientes_iis.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api_pacientes_iis
+          path: api_pacientes_iis.zip
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest -y --cleanup-tag || true
+          gh release create latest api_pacientes_iis.zip --title "API para IIS" --notes "Descomprimir y ejecutar instalar-iis.ps1 como administrador."
