@@ -23,13 +23,24 @@ jobs:
 
       - name: Prueba rapida
         run: |
+          set -e
           cd paquete/publish
+          # Base con el esquema anterior para probar la migracion
+          mkdir -p App_Data
+          sqlite3 App_Data/pacientes.db "CREATE TABLE catPacientes (IdPaciente INTEGER NOT NULL PRIMARY KEY, Nombre TEXT NOT NULL, APaterno TEXT NOT NULL, AMaterno TEXT NULL, Direccion TEXT NOT NULL, Telefono TEXT NOT NULL, Peso REAL NOT NULL, Altura REAL NOT NULL, Estatus TEXT NOT NULL); INSERT INTO catPacientes VALUES (1,'Viejo','Registro','','Calle 0','5500000000',60,160,'A');"
           dotnet ApiPacientes.dll --urls http://localhost:5080 &
           sleep 8
-          curl -sf -X POST http://localhost:5080/api/pacientes -H "Content-Type: application/json" \
-            -d '{"nombre":"Prueba","aPaterno":"Uno","aMaterno":"","direccion":"Calle 1","telefono":"5512345678","peso":70,"altura":175}'
-          curl -sf "http://localhost:5080/api/pacientes?buscar=prueba"
-          curl -sf -X PATCH http://localhost:5080/api/pacientes/1/cancelar
+          api=http://localhost:5080/api/pacientes
+          curl -sf $api/1
+          curl -sf -X POST $api -H "Content-Type: application/json" \
+            -d '{"nombre":"Prueba","aPaterno":"Uno","aMaterno":"","direccion":"Calle 1","telefono":"5512345678","peso":70,"altura":175}' | tee /tmp/nuevo.json
+          grep -q '"idPaciente":2' /tmp/nuevo.json
+          grep -q '"fechaRegistro":"' /tmp/nuevo.json
+          curl -sf "$api/duplicado?nombre=prueba&aPaterno=UNO&telefono=5512345678" | tee /tmp/dup.json
+          grep -q '"existe":true' /tmp/dup.json
+          curl -sf "$api/duplicado?nombre=prueba&aPaterno=UNO&telefono=5512345678&excluirId=2" | grep -q '"existe":false'
+          curl -sf -X PATCH $api/2/cancelar | grep -q '"fechaModificacion":"'
+          curl -sf "$api?buscar=prueba"
           kill %1
           rm -rf App_Data
 

@@ -32,6 +32,27 @@ public class PacientesController(PacientesContext db) : ControllerBase
         return Ok(lista.Select(PacienteRespuesta.Desde));
     }
 
+    // GET api/pacientes/duplicado?nombre=..&aPaterno=..&aMaterno=..&telefono=..&excluirId=..
+    // Busca otro paciente con el mismo nombre completo y teléfono
+    [HttpGet("duplicado")]
+    public async Task<ActionResult<object>> Duplicado(string nombre, string aPaterno, string? aMaterno, string telefono, int? excluirId)
+    {
+        var tel = (telefono ?? "").Trim();
+        var buscado = NombreNormalizado(nombre, aPaterno, aMaterno);
+
+        var candidatos = await db.Pacientes.AsNoTracking()
+            .Where(p => p.Telefono == tel && (excluirId == null || p.IdPaciente != excluirId))
+            .ToListAsync();
+
+        var encontrado = candidatos.FirstOrDefault(p => NombreNormalizado(p.Nombre, p.APaterno, p.AMaterno) == buscado);
+
+        return Ok(new
+        {
+            existe = encontrado is not null,
+            paciente = encontrado is null ? null : PacienteRespuesta.Desde(encontrado)
+        });
+    }
+
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PacienteRespuesta>> Obtener(int id)
     {
@@ -47,6 +68,8 @@ public class PacientesController(PacientesContext db) : ControllerBase
 
         Limpiar(p);
         p.Estatus = "A";
+        p.FechaRegistro = DateTime.UtcNow;
+        p.FechaModificacion = null;
         db.Pacientes.Add(p);
         await db.SaveChangesAsync();
 
@@ -70,6 +93,7 @@ public class PacientesController(PacientesContext db) : ControllerBase
         p.Telefono = datos.Telefono;
         p.Peso = datos.Peso;
         p.Altura = datos.Altura;
+        p.FechaModificacion = DateTime.UtcNow;
         await db.SaveChangesAsync();
 
         return Ok(PacienteRespuesta.Desde(p));
@@ -87,9 +111,14 @@ public class PacientesController(PacientesContext db) : ControllerBase
         if (p is null) return NotFound(new { mensaje = "Paciente no encontrado" });
 
         p.Estatus = estatus;
+        p.FechaModificacion = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return Ok(PacienteRespuesta.Desde(p));
     }
+
+    private static string NombreNormalizado(string? n, string? ap, string? am) =>
+        string.Join(' ', $"{n} {ap} {am}".ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
     private static void Limpiar(Paciente p)
     {

@@ -11,7 +11,9 @@ public record PacienteRespuesta(
     double Altura,
     string Estatus,
     double Imc,
-    string CategoriaImc)
+    string CategoriaImc,
+    DateTime? FechaRegistro,
+    DateTime? FechaModificacion)
 {
     public static PacienteRespuesta Desde(Paciente p)
     {
@@ -20,8 +22,12 @@ public record PacienteRespuesta(
 
         return new PacienteRespuesta(
             p.IdPaciente, p.Nombre, p.APaterno, p.AMaterno ?? "", p.Direccion,
-            p.Telefono, p.Peso, p.Altura, p.Estatus, imc, Categoria(imc));
+            p.Telefono, p.Peso, p.Altura, p.Estatus, imc, Categoria(imc),
+            Utc(p.FechaRegistro), Utc(p.FechaModificacion));
     }
+
+    // SQLite no guarda el tipo de fecha; se marca como UTC para que el JSON lleve la Z
+    private static DateTime? Utc(DateTime? f) => f is null ? null : DateTime.SpecifyKind(f.Value, DateTimeKind.Utc);
 
     private static string Categoria(double imc) => imc switch
     {

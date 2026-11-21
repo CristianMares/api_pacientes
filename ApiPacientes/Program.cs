@@ -18,7 +18,9 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<PacientesContext>().Database.EnsureCreated();
+    var db = scope.ServiceProvider.GetRequiredService<PacientesContext>();
+    db.Database.EnsureCreated();
+    Migraciones.Aplicar(db);
 }
 
 app.UseSwagger();

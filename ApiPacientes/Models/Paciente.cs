@@ -35,4 +35,8 @@ public class Paciente
 
     [RegularExpression("^[AC]$", ErrorMessage = "Estatus debe ser A o C")]
     public string Estatus { get; set; } = "A";
+
+    // Las asigna la API, en UTC
+    public DateTime? FechaRegistro { get; set; }
+    public DateTime? FechaModificacion { get; set; }
 }
